@@ -1,0 +1,686 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>German A1 Flashcards - Deutsch Lernen</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#FFF4E0',
+                        burgundy: {
+                            DEFAULT: '#7A1F3D',
+                            dark: '#58142a',
+                            light: '#9e2d52',
+                            subtle: '#2A0A14'
+                        },
+                        gold: {
+                            DEFAULT: '#D4A017',
+                            light: '#f5c842',
+                            dark: '#9e750e',
+                            glow: '#ffe27a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom Scrolling & Base Styling */
+        body {
+            background-color: #FFF4E0;
+            color: #2A0A14;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 3D Card Flip CSS */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFF4E0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D4A017;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7A1F3D;
+        }
+
+        /* Gold Gloss Effect */
+        .gold-border-glow {
+            box-shadow: 0 0 15px rgba(212, 160, 23, 0.25);
+        }
+        .burgundy-shadow {
+            box-shadow: 0 10px 25px -5px rgba(122, 31, 61, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between max-w-md md:max-w-4xl mx-auto border-x border-gold/20 shadow-2xl bg-cream">
+
+    <!-- Top Header Bar -->
+    <header class="sticky top-0 z-40 bg-burgundy text-cream shadow-md border-b-2 border-gold/40 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-full bg-gold flex items-center justify-center text-burgundy font-black text-lg shadow-inner">
+                DE
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-tight tracking-wide text-cream">Deutsch Flashcards</h1>
+                <p class="text-xs text-gold/90 font-medium">A1 Essential Vocabulary</p>
+            </div>
+        </div>
+        <button id="reset-all-btn" title="Reset All Progress" class="text-xs bg-burgundy-light hover:bg-burgundy-dark border border-gold/40 text-cream px-3 py-1.5 rounded-lg transition-all active:scale-95 flex items-center space-x-1">
+            <i class="fa-solid font-sm fa-rotate"></i>
+            <span class="hidden sm:inline">Reset</span>
+        </button>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-burgundy-dark text-cream/70 flex border-b border-gold/30">
+        <button id="nav-deck" class="flex-1 py-3 text-center font-semibold text-sm transition-all border-b-4 border-gold text-gold bg-burgundy/40 flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Card Deck (<span id="total-card-count">20</span>)</span>
+        </button>
+        <button id="nav-quiz" class="flex-1 py-3 text-center font-semibold text-sm transition-all border-b-4 border-transparent hover:text-cream flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Quiz Mode</span>
+        </button>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 p-4 md:p-6 overflow-y-auto">
+
+        <!-- SCREEN 1: DECK OVERVIEW -->
+        <section id="screen-deck" class="space-y-5">
+            <!-- Stats Progress Overview -->
+            <div class="bg-gradient-to-br from-burgundy to-burgundy-dark text-cream p-4 rounded-2xl border border-gold/30 burgundy-shadow space-y-3">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-xs uppercase tracking-wider text-gold font-bold">Overall Progress</span>
+                        <h2 class="text-2xl font-extrabold text-cream" id="deck-progress-text">0% Mastered</h2>
+                    </div>
+                    <button id="start-quiz-btn" class="bg-gold hover:bg-gold-light text-burgundy font-bold text-sm px-4 py-2.5 rounded-xl shadow-md transition-transform active:scale-95 flex items-center space-x-2">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Start Quiz</span>
+                    </button>
+                </div>
+
+                <!-- Custom Bar Chart Progress -->
+                <div class="w-full bg-burgundy-subtle/60 h-3.5 rounded-full overflow-hidden p-0.5 border border-gold/30 flex">
+                    <div id="bar-mastered" class="bg-gold h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    <div id="bar-review" class="bg-burgundy-light h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+
+                <div class="flex justify-between text-xs pt-1 border-t border-gold/10">
+                    <span class="flex items-center space-x-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-gold inline-block"></span>
+                        <span class="text-cream/90 font-medium">Mastered: <strong id="count-mastered" class="text-gold">0</strong></span>
+                    </span>
+                    <span class="flex items-center space-x-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-burgundy-light inline-block"></span>
+                        <span class="text-cream/90 font-medium">Needs Review: <strong id="count-review" class="text-cream">0</strong></span>
+                    </span>
+                    <span class="flex items-center space-x-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cream/40 inline-block"></span>
+                        <span class="text-cream/70">Unseen: <strong id="count-unseen" class="text-cream">20</strong></span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="flex flex-col sm:flex-row gap-2">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-burgundy/50 text-sm"></i>
+                    <input type="text" id="search-input" placeholder="Search German or English..." class="w-full bg-cream border-2 border-burgundy/20 focus:border-gold rounded-xl pl-10 pr-4 py-2.5 text-sm text-burgundy outline-none transition-all placeholder:text-burgundy/40">
+                </div>
+                <div class="flex gap-2">
+                    <select id="filter-select" class="bg-cream border-2 border-burgundy/20 focus:border-gold rounded-xl px-3 py-2.5 text-sm text-burgundy font-medium outline-none transition-all">
+                        <option value="all">All Cards</option>
+                        <option value="mastered">Mastered Only</option>
+                        <option value="review">Needs Review Only</option>
+                        <option value="unseen">Unseen Only</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Vocabulary Cards Grid -->
+            <div id="deck-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Cards dynamically injected here -->
+            </div>
+
+            <!-- Empty Search Results Placeholder -->
+            <div id="empty-state" class="hidden text-center py-12 space-y-3">
+                <div class="w-12 h-12 rounded-full bg-burgundy/10 text-burgundy flex items-center justify-center mx-auto text-xl">
+                    <i class="fa-solid fa-filter-circle-xmark"></i>
+                </div>
+                <p class="text-burgundy font-semibold">No vocabulary cards match your filter.</p>
+                <button id="clear-search-btn" class="text-xs bg-burgundy text-cream px-3 py-1.5 rounded-lg">Clear Filters</button>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: INTERACTIVE QUIZ MODE -->
+        <section id="screen-quiz" class="hidden flex flex-col items-center justify-between min-h-[75vh] py-2 space-y-4">
+            
+            <!-- Quiz Header & Progress Tracker -->
+            <div class="w-full space-y-2">
+                <div class="flex justify-between items-center text-xs text-burgundy font-bold uppercase tracking-wider">
+                    <span id="quiz-card-counter">Card 1 of 20</span>
+                    <span id="quiz-accuracy-text">Accuracy: --</span>
+                </div>
+
+                <!-- Custom Progress Bar -->
+                <div class="w-full bg-burgundy/10 h-2.5 rounded-full overflow-hidden p-0.5 border border-gold/30">
+                    <div id="quiz-progress-bar" class="bg-gold h-full rounded-full transition-all duration-300" style="width: 5%"></div>
+                </div>
+            </div>
+
+            <!-- 3D Flashcard Container -->
+            <div class="w-full max-w-sm h-80 perspective-1000 my-auto cursor-pointer group" id="flashcard-container">
+                <div id="flashcard-inner" class="relative w-full h-full rounded-3xl transition-transform duration-500 transform-style-3d burgundy-shadow border-2 border-gold/40">
+                    
+                    <!-- FRONT SIDE (German) -->
+                    <div class="absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-b from-burgundy to-burgundy-dark text-cream p-6 flex flex-col justify-between items-center text-center backface-hidden select-none">
+                        <div class="w-full flex justify-between items-center">
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gold/20 text-gold border border-gold/30 uppercase tracking-widest" id="card-front-article">der / die / das</span>
+                            <button class="audio-btn text-gold hover:text-gold-glow p-2 transition-transform active:scale-90" title="Listen German">
+                                <i class="fa-solid fa-volume-high text-lg"></i>
+                            </button>
+                        </div>
+
+                        <div class="space-y-2 my-auto">
+                            <h2 class="text-3xl font-extrabold text-cream tracking-tight" id="card-front-word">Wort</h2>
+                            <p class="text-sm text-gold/90 italic font-medium max-w-xs" id="card-front-example">"Beispielsatz hier..."</p>
+                        </div>
+
+                        <div class="text-xs text-cream/50 flex items-center space-x-1">
+                            <i class="fa-solid fa-hand-pointer text-gold/70"></i>
+                            <span>Tap card to flip to English</span>
+                        </div>
+                    </div>
+
+                    <!-- BACK SIDE (English) -->
+                    <div class="absolute inset-0 w-full h-full rounded-3xl bg-cream border-4 border-gold text-burgundy p-6 flex flex-col justify-between items-center text-center backface-hidden rotate-y-180 select-none">
+                        <div class="w-full flex justify-between items-center">
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-burgundy/10 text-burgundy uppercase tracking-widest">English Translation</span>
+                            <span class="text-xs font-bold text-gold-dark" id="card-back-category">A1 Noun</span>
+                        </div>
+
+                        <div class="space-y-2 my-auto">
+                            <h2 class="text-3xl font-extrabold text-burgundy tracking-tight" id="card-back-translation">Word</h2>
+                            <p class="text-xs text-burgundy/70 italic font-medium max-w-xs" id="card-back-note">Grammatical details or extra notes</p>
+                        </div>
+
+                        <div class="text-xs text-burgundy/50 flex items-center space-x-1">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Tap again to flip back</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Quiz Action Controls -->
+            <div class="w-full max-w-sm space-y-3">
+                <div class="grid grid-cols-2 gap-3" id="quiz-action-buttons">
+                    <!-- Again / Needs Review Button -->
+                    <button id="btn-again" class="py-3.5 px-4 rounded-2xl bg-burgundy hover:bg-burgundy-dark text-cream font-bold text-sm shadow-lg transition-all active:scale-95 flex items-center justify-center space-x-2 border border-burgundy-light">
+                        <i class="fa-solid fa-rotate-right text-gold"></i>
+                        <span>Again (Needs Review)</span>
+                    </button>
+
+                    <!-- Knew It / Mastered Button -->
+                    <button id="btn-knew" class="py-3.5 px-4 rounded-2xl bg-gold hover:bg-gold-light text-burgundy font-extrabold text-sm shadow-lg transition-all active:scale-95 flex items-center justify-center space-x-2 border border-gold-glow">
+                        <i class="fa-solid fa-check text-burgundy"></i>
+                        <span>Knew It!</span>
+                    </button>
+                </div>
+
+                <div class="flex justify-center">
+                    <button id="btn-flip-manual" class="text-xs font-semibold text-burgundy/70 hover:text-burgundy underline flex items-center space-x-1 py-1">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>Flip Card</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- QUIZ SUMMARY MODAL / SCREEN (Hidden initially) -->
+            <div id="quiz-summary-view" class="hidden absolute inset-0 z-50 bg-cream/95 backdrop-blur-sm p-6 flex flex-col justify-center items-center text-center space-y-6">
+                <div class="w-20 h-20 rounded-full bg-gold/20 text-gold flex items-center justify-center text-4xl border-2 border-gold shadow-lg">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-3xl font-black text-burgundy">Deck Session Complete!</h2>
+                    <p class="text-sm text-burgundy/80">Great job practicing your German vocabulary.</p>
+                </div>
+
+                <div class="w-full max-w-xs bg-burgundy text-cream p-4 rounded-2xl border border-gold/30 space-y-3">
+                    <div class="flex justify-between items-center text-sm border-b border-gold/20 pb-2">
+                        <span>Total Reviewed:</span>
+                        <strong class="text-gold" id="summary-total">20</strong>
+                    </div>
+                    <div class="flex justify-between items-center text-sm border-b border-gold/20 pb-2">
+                        <span>Known on First Try:</span>
+                        <strong class="text-gold" id="summary-known">0</strong>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span>Session Accuracy:</span>
+                        <strong class="text-gold" id="summary-accuracy">0%</strong>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+                    <button id="summary-restart-all" class="flex-1 py-3 bg-burgundy hover:bg-burgundy-dark text-cream font-bold rounded-xl text-sm transition-all shadow-md">
+                        Practice All Cards
+                    </button>
+                    <button id="summary-review-missed" class="flex-1 py-3 bg-gold hover:bg-gold-light text-burgundy font-bold rounded-xl text-sm transition-all shadow-md">
+                        Review Missed
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer Info -->
+    <footer class="bg-burgundy-dark text-cream/50 text-center text-xs py-3 border-t border-gold/20">
+        <p>German A1 Vocabulary Flashcard Deck • Strictly No Data Collected</p>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 20 SAMPLE GERMAN A1 VOCABULARY CARDS ---
+        const initialCards = [
+            { id: 1, german: "Hallo", article: "Interjection", english: "Hello", example: "Hallo, wie geht es dir?", status: "unseen" },
+            { id: 2, german: "Tisch", article: "der", english: "Table", example: "Der Tisch ist neu.", status: "unseen" },
+            { id: 3, german: "Katze", article: "die", english: "Cat", example: "Die Katze schläft gerne.", status: "unseen" },
+            { id: 4, german: "Buch", article: "das", english: "Book", example: "Das Buch ist sehr interessant.", status: "unseen" },
+            { id: 5, german: "Danke", article: "Phrase", english: "Thank you", example: "Vielen Dank für Ihre Hilfe!", status: "unseen" },
+            { id: 6, german: "Wasser", article: "das", english: "Water", example: "Ich trinke gerne kaltes Wasser.", status: "unseen" },
+            { id: 7, german: "Brot", article: "das", english: "Bread", example: "Möchtest du frisches Brot?", status: "unseen" },
+            { id: 8, german: "Haus", article: "das", english: "House", example: "Unser Haus ist sehr groß.", status: "unseen" },
+            { id: 9, german: "Freund", article: "der", english: "Friend (male)", example: "Mein Freund kommt heute vorbei.", status: "unseen" },
+            { id: 10, german: "Schule", article: "die", english: "School", example: "Die Kinder gehen zur Schule.", status: "unseen" },
+            { id: 11, german: "Apfel", article: "der", english: "Apple", example: "Ich esse jeden Tag einen Apfel.", status: "unseen" },
+            { id: 12, german: "Sonne", article: "die", english: "Sun", example: "Die Sonne scheint hell.", status: "unseen" },
+            { id: 13, german: "Auto", article: "das", english: "Car", example: "Das Auto fahrt sehr schnell.", status: "unseen" },
+            { id: 14, german: "Mutter", article: "die", english: "Mother", example: "Meine Mutter kocht fantastisch.", status: "unseen" },
+            { id: 15, german: "Zeit", article: "die", english: "Time", example: "Hast du heute etwas Zeit?", status: "unseen" },
+            { id: 16, german: "Hund", article: "der", english: "Dog", example: "Der Hund bellt im Garten.", status: "unseen" },
+            { id: 17, german: "Stadt", article: "die", english: "City / Town", example: "Berlin ist eine große Stadt.", status: "unseen" },
+            { id: 18, german: "Kind", article: "das", english: "Child", example: "Das Kind spielt im Park.", status: "unseen" },
+            { id: 19, german: "Auf Wiedersehen", article: "Phrase", english: "Goodbye", example: "Auf Wiedersehen, bis morgen!", status: "unseen" },
+            { id: 20, german: "Guten Morgen", article: "Phrase", english: "Good morning", example: "Guten Morgen allerseits!", status: "unseen" }
+        ];
+
+        // --- APP STATE ---
+        let cards = JSON.parse(localStorage.getItem('de_a1_flashcards')) || [...initialCards];
+        let currentQuizQueue = [];
+        let currentQuizIndex = 0;
+        let sessionCorrectCount = 0;
+        let isFlipped = false;
+
+        // --- DOM ELEMENTS ---
+        const screenDeck = document.getElementById('screen-deck');
+        const screenQuiz = document.getElementById('screen-quiz');
+        const navDeck = document.getElementById('nav-deck');
+        const navQuiz = document.getElementById('nav-quiz');
+
+        const deckGrid = document.getElementById('deck-grid');
+        const searchInput = document.getElementById('search-input');
+        const filterSelect = document.getElementById('filter-select');
+        const emptyState = document.getElementById('empty-state');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+
+        const deckProgressText = document.getElementById('deck-progress-text');
+        const countMastered = document.getElementById('count-mastered');
+        const countReview = document.getElementById('count-review');
+        const countUnseen = document.getElementById('count-unseen');
+        const barMastered = document.getElementById('bar-mastered');
+        const barReview = document.getElementById('bar-review');
+
+        const flashcardContainer = document.getElementById('flashcard-container');
+        const flashcardInner = document.getElementById('flashcard-inner');
+        const cardFrontArticle = document.getElementById('card-front-article');
+        const cardFrontWord = document.getElementById('card-front-word');
+        const cardFrontExample = document.getElementById('card-front-example');
+        const cardBackTranslation = document.getElementById('card-back-translation');
+        const cardBackCategory = document.getElementById('card-back-category');
+        const cardBackNote = document.getElementById('card-back-note');
+
+        const quizCardCounter = document.getElementById('quiz-card-counter');
+        const quizAccuracyText = document.getElementById('quiz-accuracy-text');
+        const quizProgressBar = document.getElementById('quiz-progress-bar');
+        const btnAgain = document.getElementById('btn-again');
+        const btnKnew = document.getElementById('btn-knew');
+        const btnFlipManual = document.getElementById('btn-flip-manual');
+
+        const quizSummaryView = document.getElementById('quiz-summary-view');
+        const summaryTotal = document.getElementById('summary-total');
+        const summaryKnown = document.getElementById('summary-known');
+        const summaryAccuracy = document.getElementById('summary-accuracy');
+        const summaryRestartAll = document.getElementById('summary-restart-all');
+        const summaryReviewMissed = document.getElementById('summary-review-missed');
+
+        // --- SPEECH SYNTHESIS (GERMAN PRONUNCIATION) ---
+        function speakGerman(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop ongoing speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'de-DE';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- LOCAL STORAGE HELPERS ---
+        function saveState() {
+            localStorage.setItem('de_a1_flashcards', JSON.stringify(cards));
+            updateStatsUI();
+        }
+
+        // --- CALCULATE & UPDATE DECK STATS ---
+        function updateStatsUI() {
+            const total = cards.length;
+            const mastered = cards.filter(c => c.status === 'mastered').length;
+            const review = cards.filter(c => c.status === 'review').length;
+            const unseen = total - (mastered + review);
+
+            const masteredPct = Math.round((mastered / total) * 100);
+            const reviewPct = Math.round((review / total) * 100);
+
+            deckProgressText.innerText = `${masteredPct}% Mastered`;
+            countMastered.innerText = mastered;
+            countReview.innerText = review;
+            countUnseen.innerText = unseen;
+
+            barMastered.style.width = `${masteredPct}%`;
+            barReview.style.width = `${reviewPct}%`;
+        }
+
+        // --- RENDER DECK OVERVIEW CARDS ---
+        function renderDeck() {
+            const query = searchInput.value.toLowerCase().trim();
+            const filter = filterSelect.value;
+
+            deckGrid.innerHTML = '';
+
+            const filteredCards = cards.filter(card => {
+                const matchesSearch = card.german.toLowerCase().includes(query) || 
+                                      card.english.toLowerCase().includes(query);
+                
+                let matchesFilter = true;
+                if (filter === 'mastered') matchesFilter = card.status === 'mastered';
+                if (filter === 'review') matchesFilter = card.status === 'review';
+                if (filter === 'unseen') matchesFilter = card.status === 'unseen';
+
+                return matchesSearch && matchesFilter;
+            });
+
+            if (filteredCards.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                filteredCards.forEach(card => {
+                    const cardEl = document.createElement('div');
+                    cardEl.className = `p-4 rounded-2xl border-2 transition-all bg-cream flex flex-col justify-between space-y-2 relative shadow-sm hover:shadow-md ${
+                        card.status === 'mastered' ? 'border-gold bg-gold/5' : 
+                        card.status === 'review' ? 'border-burgundy/40 bg-burgundy/5' : 'border-burgundy/10'
+                    }`;
+
+                    let statusBadge = '';
+                    if (card.status === 'mastered') {
+                        statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gold text-burgundy flex items-center space-x-1">
+                                        <i class="fa-solid fa-check"></i> <span>Mastered</span>
+                                       </span>`;
+                    } else if (card.status === 'review') {
+                        statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-burgundy/20 text-burgundy flex items-center space-x-1">
+                                        <i class="fa-solid fa-rotate-right text-xs"></i> <span>Needs Review</span>
+                                       </span>`;
+                    } else {
+                        statusBadge = `<span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-cream border border-burgundy/20 text-burgundy/60">
+                                        Unseen
+                                       </span>`;
+                    }
+
+                    cardEl.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[11px] font-bold text-gold-dark uppercase tracking-wider">${card.article}</span>
+                                <h3 class="text-xl font-black text-burgundy leading-snug">${card.german}</h3>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <p class="text-sm font-semibold text-burgundy/80">${card.english}</p>
+                        <p class="text-xs text-burgundy/60 italic truncate">"${card.example}"</p>
+                        <div class="pt-2 flex justify-between items-center border-t border-burgundy/10">
+                            <button onclick="speakGerman('${card.german}')" class="text-xs text-burgundy hover:text-gold flex items-center space-x-1 p-1">
+                                <i class="fa-solid fa-volume-high"></i>
+                                <span>Audio</span>
+                            </button>
+                            <button onclick="startSingleQuiz(${card.id})" class="text-xs font-bold text-gold-dark hover:text-burgundy flex items-center space-x-1 p-1">
+                                <span>Practice</span>
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    `;
+                    deckGrid.appendChild(cardEl);
+                });
+            }
+        }
+
+        // --- NAVIGATION HANDLERS ---
+        function switchTab(tab) {
+            if (tab === 'deck') {
+                screenDeck.classList.remove('hidden');
+                screenQuiz.classList.add('hidden');
+                navDeck.className = "flex-1 py-3 text-center font-semibold text-sm transition-all border-b-4 border-gold text-gold bg-burgundy/40 flex items-center justify-center space-x-2";
+                navQuiz.className = "flex-1 py-3 text-center font-semibold text-sm transition-all border-b-4 border-transparent hover:text-cream flex items-center justify-center space-x-2";
+                renderDeck();
+                updateStatsUI();
+            } else {
+                screenDeck.classList.add('hidden');
+                screenQuiz.classList.remove('hidden');
+                navQuiz.className = "flex-1 py-3 text-center font-semibold text-sm transition-all border-b-4 border-gold text-gold bg-burgundy/40 flex items-center justify-center space-x-2";
+                navDeck.className = "flex-1 py-3 text-center font-semibold text-sm transition-all border-b-4 border-transparent hover:text-cream flex items-center justify-center space-x-2";
+            }
+        }
+
+        // --- QUIZ LOGIC ---
+        function startQuizMode(filterMode = 'all') {
+            quizSummaryView.classList.add('hidden');
+            if (filterMode === 'review') {
+                currentQuizQueue = cards.filter(c => c.status === 'review');
+                if (currentQuizQueue.length === 0) {
+                    currentQuizQueue = [...cards]; // Fallback if no review cards
+                }
+            } else {
+                currentQuizQueue = [...cards];
+            }
+
+            // Shuffle cards queue
+            currentQuizQueue.sort(() => Math.random() - 0.5);
+
+            currentQuizIndex = 0;
+            sessionCorrectCount = 0;
+            switchTab('quiz');
+            loadQuizCard();
+        }
+
+        function startSingleQuiz(cardId) {
+            const card = cards.find(c => c.id === cardId);
+            if (card) {
+                currentQuizQueue = [card];
+                currentQuizIndex = 0;
+                sessionCorrectCount = 0;
+                switchTab('quiz');
+                loadQuizCard();
+            }
+        }
+
+        function loadQuizCard() {
+            if (currentQuizIndex >= currentQuizQueue.length) {
+                showQuizSummary();
+                return;
+            }
+
+            // Reset Flip State
+            isFlipped = false;
+            flashcardInner.classList.remove('rotate-y-180');
+
+            const card = currentQuizQueue[currentQuizIndex];
+
+            // Render Card Data
+            cardFrontArticle.innerText = card.article;
+            cardFrontWord.innerText = card.german;
+            cardFrontExample.innerText = `"${card.example}"`;
+
+            cardBackTranslation.innerText = card.english;
+            cardBackCategory.innerText = card.article;
+            cardBackNote.innerText = `Example: ${card.example}`;
+
+            // Update Header Tracking
+            quizCardCounter.innerText = `Card ${currentQuizIndex + 1} of ${currentQuizQueue.length}`;
+            const pct = Math.round(((currentQuizIndex) / currentQuizQueue.length) * 100);
+            quizProgressBar.style.width = `${pct}%`;
+
+            const currentAccuracy = currentQuizIndex === 0 ? '--' : `${Math.round((sessionCorrectCount / currentQuizIndex) * 100)}%`;
+            quizAccuracyText.innerText = `Accuracy: ${currentAccuracy}`;
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            if (isFlipped) {
+                flashcardInner.classList.add('rotate-y-180');
+            } else {
+                flashcardInner.classList.remove('rotate-y-180');
+            }
+        }
+
+        function handleQuizAnswer(isKnown) {
+            const card = currentQuizQueue[currentQuizIndex];
+            const masterCard = cards.find(c => c.id === card.id);
+
+            if (isKnown) {
+                sessionCorrectCount++;
+                if (masterCard) masterCard.status = 'mastered';
+            } else {
+                if (masterCard) masterCard.status = 'review';
+            }
+
+            saveState();
+
+            // Next Card
+            currentQuizIndex++;
+            loadQuizCard();
+        }
+
+        function showQuizSummary() {
+            quizSummaryView.classList.remove('hidden');
+            summaryTotal.innerText = currentQuizQueue.length;
+            summaryKnown.innerText = sessionCorrectCount;
+            const accuracy = Math.round((sessionCorrectCount / currentQuizQueue.length) * 100) || 0;
+            summaryAccuracy.innerText = `${accuracy}%`;
+            quizProgressBar.style.width = `100%`;
+        }
+
+        // --- EVENT LISTENERS ---
+        navDeck.addEventListener('click', () => switchTab('deck'));
+        navQuiz.addEventListener('click', () => startQuizMode('all'));
+        document.getElementById('start-quiz-btn').addEventListener('click', () => startQuizMode('all'));
+
+        // Flip triggers
+        flashcardContainer.addEventListener('click', (e) => {
+            // Prevent flipping if audio button is clicked
+            if (e.target.closest('.audio-btn')) return;
+            flipCard();
+        });
+        btnFlipManual.addEventListener('click', flipCard);
+
+        // Audio button in quiz
+        document.querySelectorAll('.audio-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const currentCard = currentQuizQueue[currentQuizIndex];
+                if (currentCard) speakGerman(currentCard.german);
+            });
+        });
+
+        // Quiz buttons
+        btnAgain.addEventListener('click', () => handleQuizAnswer(false));
+        btnKnew.addEventListener('click', () => handleQuizAnswer(true));
+
+        // Summary restart options
+        summaryRestartAll.addEventListener('click', () => startQuizMode('all'));
+        summaryReviewMissed.addEventListener('click', () => startQuizMode('review'));
+
+        // Search and Filter Listeners
+        searchInput.addEventListener('input', renderDeck);
+        filterSelect.addEventListener('change', renderDeck);
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            filterSelect.value = 'all';
+            renderDeck();
+        });
+
+        // Reset All Progress
+        document.getElementById('reset-all-btn').addEventListener('click', () => {
+            if (confirm("Reset all learning progress for this deck?")) {
+                cards = initialCards.map(c => ({ ...c, status: 'unseen' }));
+                saveState();
+                renderDeck();
+                updateStatsUI();
+            }
+        });
+
+        // Keyboard Navigation Shortcuts for Accessibility/Desktop Play
+        document.addEventListener('keydown', (e) => {
+            if (!screenQuiz.classList.contains('hidden') && quizSummaryView.classList.contains('hidden')) {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    flipCard();
+                } else if (e.code === 'ArrowLeft') {
+                    handleQuizAnswer(false); // Again
+                } else if (e.code === 'ArrowRight') {
+                    handleQuizAnswer(true); // Knew it
+                }
+            }
+        });
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            updateStatsUI();
+            renderDeck();
+        };
+    </script>
+</body>
+</html>
+```
